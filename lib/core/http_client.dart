@@ -60,6 +60,19 @@ class ApiClient {
     final message = detail is String ? detail : 'Error inesperado';
     if (code == 404) throw NotFoundFailure(message);
     if (code == 409) throw ConflictFailure(message);
+    if (code == 422) {
+      final fields = <String, String>{};
+      if (detail is List) {
+        for (final item in detail) {
+          if (item is Map && item['loc'] is List &&
+              (item['loc'] as List).length > 1 && item['msg'] is String) {
+            fields[(item['loc'] as List)[1].toString()] = item['msg'] as String;
+          }
+        }
+      }
+      throw ValidationFailure(fields);
+    }
+    if (code >= 500 && code <= 599) throw ServerFailure(code);
     throw UnexpectedFailure(code, message);
   }
 
