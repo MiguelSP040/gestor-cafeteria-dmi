@@ -56,7 +56,11 @@ class ApiClient {
     final json = _tryDecode(response);
     final code = response.statusCode;
     if (code >= 200 && code <= 300) return json;
-    throw const NetworkFailure();
+    final detail = json is Map ? json['detail'] : null;
+    final message = detail is String ? detail : 'Error inesperado';
+    if (code == 404) throw NotFoundFailure(message);
+    if (code == 409) throw ConflictFailure(message);
+    throw UnexpectedFailure(code, message);
   }
 
   dynamic _tryDecode(http.Response response) {
